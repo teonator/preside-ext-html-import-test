@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form i18nBaseUri="HTMLImport:">
+	<tab id="default">
+		<fieldset id="default" sortOrder="10">
+			<field name="parent_page"                control="siteTreePagePicker" sortOrder="10" required="true" />
+			<field name="zip_file"                   control="fileupload"         sortOrder="20" required="true" accept="application/zip" />
+			<field name="main_content_edit_disabled" control="yesNoSwitch"        sortOrder="30" />
+			<field name="page_heading"               control="enumSelect"         sortOrder="40" enum="htmlImportPageHeading" default="h1" />
+			<field name="child_pages_enabled"        control="toggle"             sortOrder="50" toggleType="switch" toggleFields="child_pages_heading" />
+			<field name="child_pages_heading"        control="enumSelect"         sortOrder="60" enum="htmlImportChildPagesHeading" default="h2">
+				<rule validator="requiredIfOtherFieldChecked">
+					<param name="otherField"   value="child_pages_enabled" />
+					<param name="checkedValue" value="1" />
+				</rule>
+			</field>
+			<field name="content_sections_enabled"   control="toggle"             sortOrder="70" toggleType="switch" toggleFields="content_sections_heading" />
+			<field name="content_sections_heading"   control="enumSelect"         sortOrder="80" enum="htmlImportContentSectionsHeading" default="h3">
+				<rule validator="requiredIfOtherFieldChecked">
+					<param name="otherField"   value="content_sections_enabled" />
+					<param name="checkedValue" value="1" />
+				</rule>
+			</field>
+		</fieldset>
+	</tab>
+</form>

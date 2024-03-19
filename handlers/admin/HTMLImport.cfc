@@ -12,17 +12,24 @@ component extends="preside.system.base.AdminHandler" {
 	}
 
 	public void function import( event, rc, prc, args={} ) {
-		args.formName   = "htmlImport.import";
-		args.formId     = Replace( args.formName, ".", "-", "all" );
-		args.formAction = event.buildAdminLink( linkTo="htmlImport.importAction" );
-		args.formHtml   = renderForm(
+		var pageId = rc.page ?: "";
+
+		var savedData = rc.savedData ?: {
+			page = pageId
+		};
+
+		args.formName       = "htmlImport.import";
+		args.formId         = Replace( args.formName, ".", "-", "all" );
+		args.formAction     = event.buildAdminLink( linkTo="htmlImport.importAction" );
+		args.formCancelLink = event.buildAdminLink( linkTo="SiteTree.editPage", querystring="id=#pageId#" );
+		args.formHtml       = renderForm(
 			  formName         = args.formName
-			, savedData        = rc.savedData        ?: {}
+			, savedData        = savedData
 			, validationResult = rc.validationResult ?: ""
 			, context          = "admin"
 		);
 
-		prc.pageTitle = translateResource( uri="HTMLImport:title" );
+		prc.pageTitle = translateResource( uri="HTMLImport:title"     );
 		prc.pageIcon  = translateResource( uri="HTMLImport:iconClass" );
 
 		event.addAdminBreadCrumb(
@@ -36,6 +43,7 @@ component extends="preside.system.base.AdminHandler" {
 	public void function importAction( event, rc, prc, args={} ) {
 		var validationResult = validateForms();
 		var formData         = event.getCollectionForForm();
+		var pageId           = formData.page ?: "";
 
 		if ( !validationResult.validated() ) {
 			var persistStruct = event.getCollectionWithoutSystemVars();
@@ -43,25 +51,24 @@ component extends="preside.system.base.AdminHandler" {
 			persistStruct.validationResult = validationResult;
 
 			setNextEvent(
-				  url           = event.buildAdminLink( linkTo="htmlImport.import" )
+				  url           = event.buildAdminLink( linkTo="HTMLImport.import", queryString="page=#pageId#" )
 				, persistStruct = persistStruct
 			);
 		}
 
 		var taskId = createTask(
-			  event             = "admin.HtmlImport.importInBackgroundThread"
-			, runNow            = true
-			// , discardOnComplete = true
-			, adminOwner        = event.getAdminUserId()
-			, title             = "HTMLImport:title"
-			// , resultUrl         = event.buildAdminLink( linkTo="htmlImport.import" )
-			, returnUrl         = event.buildAdminLink( linkTo="htmlImport.import" )
-			, args              = {
+			  event      = "admin.HtmlImport.importInBackgroundThread"
+			, runNow     = true
+			, adminOwner = event.getAdminUserId()
+			, title      = "HTMLImport:title"
+			, returnUrl  = event.buildAdminLink( linkTo="HTMLImport.import", queryString="page=#pageId#" )
+			, args       = {
 				  userId                  = event.getAdminUserId()
-				, parentPage              = formData.parent_page              ?: ""
+				, page                    = pageId
 				, zipFile                 = formData.zip_file                 ?: {}
 				, pageHeading             = formData.page_heading             ?: ""
 				, childPagesHeading       = formData.child_pages_heading      ?: ""
+				, childPagesType          = formData.child_pages_type         ?: ""
 				, contentSectionsHeading  = formData.content_sections_heading ?: ""
 				, mainContentEditDisabled = isTrue( formData.main_content_edit_disabled ?: "" )
 				, childPagesEnabled       = isTrue( formData.child_pages_enabled        ?: "" )
@@ -76,8 +83,6 @@ component extends="preside.system.base.AdminHandler" {
 	}
 
 	private boolean function importInBackgroundThread( event, rc, prc, args={}, logger, progress ) {
-		arguments.logger?.info( "Importing HTML..." );
-
 		htmlImportService.importFromZipFile( argumentCollection=args, logger=arguments.logger, progress=arguments.progress );
 
 		return true;

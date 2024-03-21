@@ -20,11 +20,11 @@ component {
 	public string function importFromZipFile(
 		  required struct  zipFile
 		,          string  page                    = ""
-		,          boolean mainContentEditDisabled = false
 		,          string  pageHeading             = "h1"
 		,          boolean childPagesEnabled       = false
 		,          string  childPagesHeading       = "h2"
 		,          string  childPagesType          = "standard_page"
+		,          struct  data                    = {}
 		,          any     logger
 		,          any     progress
 	) {
@@ -131,58 +131,63 @@ component {
 		, required string  htmlFileDir
 		, required string  parentPageId
 		,          string  childPagesType          = "standard_page"
-		,          boolean mainContentEditDisabled = false
+		,          struct  data                    = {}
 		,          any     logger
 		,          any     progress
 	) {
-		var totalPages = ArrayLen( arguments.pages );
+		$announceInterception( "preHTMLImportPages", { pages=arguments.pages, data=arguments.data } );
+
+		var totalPages   = ArrayLen( arguments.pages );
+		var pageTypeName = $translateResource( uri="page-types.#arguments.childPagesType#:name", defaultValue=arguments.childPagesType );
 
 		if ( totalPages ) {
-			var parentPage = siteTreeService.getPage( id=arguments.parentPageId );
+			var parentPage = siteTreeService.getPage( id=arguments.parentPageId, selectFields=[ "title", "_hierarchy_slug", "page_type" ] );
 
-			for ( var page in pages ) {
-				var slug = $helpers.slugify( page.title );
+			for ( var i=1; i<=totalPages; i++ ) {
+				var title   = $helpers.isEmptyString( arguments.pages[ i ].title ) ? parentPage.title : arguments.pages[ i ].title;
+				var content = _processImages( argumentCollection=arguments, htmlContent=arguments.pages[ i ].content );
 
-				var content = _processImages( argumentCollection=arguments, htmlContent=page.content );
+				var slug = $helpers.slugify( title );
 
-				if ( page.child ) {
+				if ( arguments.pages[ i ].child ) {
 					var pageId = siteTreeService.getPageIdBySlug( slug="#parentPage._hierarchy_slug##slug#/" );
 
 					if ( !$helpers.isEmptyString( pageId ) ) {
-						arguments.logger?.info( "Updating #arguments.childPagesType#: #page.title#" );
+						arguments.logger?.info( "Updating #pageTypeName#: #title#" );
 
 						siteTreeService.editPage(
-							  id                         = pageId
-							, title                      = page.title
-							, main_content               = content
-							, main_content_edit_disabled = arguments.mainContentEditDisabled
+							  id           = pageId
+							, title        = title
+							, main_content = content
 						);
 					} else {
-						arguments.logger?.info( "Creating #arguments.childPagesType#: #page.title#" );
+						arguments.logger?.info( "Creating #pageTypeName#: #title#" );
 
 						pageId = siteTreeService.addPage(
-							  page_type                  = arguments.childPagesType
-							, slug                       = slug
-							, parent_page                = parentPageId
-							, title                      = page.title
-							, main_content               = content
-							, main_content_edit_disabled = arguments.mainContentEditDisabled
+							  page_type    = arguments.childPagesType
+							, slug         = slug
+							, parent_page  = parentPageId
+							, title        = title
+							, main_content = content
 						);
 					}
-				} else {
-					var pageTitle = $helpers.isEmptyString( page.title ) ? parentPage.title : page.title;
 
-					arguments.logger?.info( "Updating #parentPage.page_type#: #pageTitle#" );
+					arguments.pages[ i ].id = pageId;
+				} else {
+					arguments.logger?.info( "Updating #$translateResource( uri="page-types.#parentPage.page_type#:name", defaultValue=parentPage.page_type )#: #title#" );
 
 					siteTreeService.editPage(
-						  id                         = parentPageId
-						, title                      = pageTitle
-						, main_content               = content
-						, main_content_edit_disabled = arguments.mainContentEditDisabled
+						  id           = parentPageId
+						, title        = title
+						, main_content = content
 					);
+
+					arguments.pages[ i ].id = parentPageId;
 				}
 			}
 		}
+
+		$announceInterception( "postHTMLImportPages", { pages=arguments.pages, data=arguments.data } );
 
 		return totalPages;
 	}

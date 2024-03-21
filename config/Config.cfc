@@ -41,7 +41,8 @@ component {
 	}
 
 	private void function _setupInterceptors( conf ) {
-		ArrayPrepend( conf.interceptors, { class="app.extensions.preside-ext-html-import.interceptors.HTMLImportInterceptor", properties={} } );
+		ArrayAppend( conf.interceptorSettings.customInterceptionPoints, "preHTMLImportPages"  );
+		ArrayAppend( conf.interceptorSettings.customInterceptionPoints, "postHTMLImportPages" );
 	}
 
 }

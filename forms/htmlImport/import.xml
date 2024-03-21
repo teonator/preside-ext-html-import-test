@@ -4,16 +4,15 @@
 		<fieldset id="default" sortOrder="10">
 			<field name="page"                       control="siteTreePagePicker"       sortOrder="10" required="true" />
 			<field name="zip_file"                   control="fileupload"               sortOrder="20" required="true" accept="application/zip" />
-			<field name="main_content_edit_disabled" control="yesNoSwitch"              sortOrder="30" />
-			<field name="page_heading"               control="enumSelect"               sortOrder="40" enum="htmlImportPageHeading" default="" />
-			<field name="child_pages_enabled"        control="toggle"                   sortOrder="50" toggleType="switch" toggleFields="child_pages_heading,child_pages_type" />
-			<field name="child_pages_heading"        control="enumSelect"               sortOrder="60" enum="htmlImportChildPagesHeading" default="h2">
+			<field name="page_heading"               control="enumSelect"               sortOrder="30" enum="htmlImportPageHeading" default="" />
+			<field name="child_pages_enabled"        control="toggle"                   sortOrder="40" toggleType="switch" toggleFields="child_pages_heading,child_pages_type" />
+			<field name="child_pages_heading"        control="enumSelect"               sortOrder="50" enum="htmlImportChildPagesHeading" default="h2">
 				<rule validator="requiredIfOtherFieldChecked">
 					<param name="otherField"   value="child_pages_enabled" />
 					<param name="checkedValue" value="1" />
 				</rule>
 			</field>
-			<field name="child_pages_type"           control="htmlImportPageTypePicker" sortOrder="70">
+			<field name="child_pages_type"           control="htmlImportPageTypePicker" sortOrder="60">
 				<rule validator="requiredIfOtherFieldChecked">
 					<param name="otherField"   value="child_pages_enabled" />
 					<param name="checkedValue" value="1" />

@@ -8,15 +8,17 @@ component extends="preside.system.base.AdminHandler" {
 	}
 
 	public void function index( event, rc, prc, args={} ) {
-		setNextEvent( url=event.buildAdminLink( linkTo="htmlImport.import" ) );
+		setNextEvent( url=event.buildAdminLink( linkTo="HTMLImport.import" ) );
 		return;
 	}
 
 	public void function import( event, rc, prc, args={} ) {
 		var pageId = rc.page ?: "";
+		var page   = sitetreeService.getPage( id=pageId, selectFields=[ "id", "page_type", "title" ] );
 
 		var savedData = rc.savedData ?: {
-			page = pageId
+			  page             = page.id        ?: ""
+			, child_pages_type = page.page_type ?: ""
 		};
 
 		args.formName       = "htmlImport.import";
@@ -38,15 +40,13 @@ component extends="preside.system.base.AdminHandler" {
 		for( var ancestor in ancestors ) {
 			event.addAdminBreadCrumb(
 				  title = ancestor.title
-				, link  = event.buildAdminLink( linkTo="sitetree.editpage", queryString="id=#ancestor.id#" )
+				, link  = event.buildAdminLink( linkTo="SiteTree.editPage", queryString="id=#ancestor.id#" )
 			);
 		}
 
-		var page = sitetreeService.getPage( id=pageId, selectFields=[ "id", "title" ] );
-
 		event.addAdminBreadCrumb(
 			  title = page.title ?: ""
-			, link  = event.buildAdminLink( linkTo="sitetree.editpage", queryString="id=#pageId#"  )
+			, link  = event.buildAdminLink( linkTo="SiteTree.editPage", queryString="id=#pageId#" )
 		);
 
 		event.addAdminBreadCrumb(
@@ -78,7 +78,7 @@ component extends="preside.system.base.AdminHandler" {
 			, runNow     = true
 			, adminOwner = event.getAdminUserId()
 			, title      = "HTMLImport:title"
-			, returnUrl  = event.buildAdminLink( linkTo="HTMLImport.import", queryString="page=#pageId#" )
+			, returnUrl  = event.buildAdminLink( linkTo="SiteTree.editPage", queryString="id=#pageId#" )
 			, args       = {
 				  userId                  = event.getAdminUserId()
 				, page                    = pageId
@@ -86,8 +86,8 @@ component extends="preside.system.base.AdminHandler" {
 				, pageHeading             = formData.page_heading        ?: ""
 				, childPagesHeading       = formData.child_pages_heading ?: ""
 				, childPagesType          = formData.child_pages_type    ?: ""
-				, mainContentEditDisabled = isTrue( formData.main_content_edit_disabled ?: "" )
 				, childPagesEnabled       = isTrue( formData.child_pages_enabled        ?: "" )
+				, data                    = formData
 			  }
 		);
 

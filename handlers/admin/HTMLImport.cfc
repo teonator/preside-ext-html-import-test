@@ -65,14 +65,12 @@ component extends="preside.system.base.AdminHandler" {
 			, args       = {
 				  userId                  = event.getAdminUserId()
 				, page                    = pageId
-				, zipFile                 = formData.zip_file                 ?: {}
-				, pageHeading             = formData.page_heading             ?: ""
-				, childPagesHeading       = formData.child_pages_heading      ?: ""
-				, childPagesType          = formData.child_pages_type         ?: ""
-				, contentSectionsHeading  = formData.content_sections_heading ?: ""
+				, zipFile                 = formData.zip_file            ?: {}
+				, pageHeading             = formData.page_heading        ?: ""
+				, childPagesHeading       = formData.child_pages_heading ?: ""
+				, childPagesType          = formData.child_pages_type    ?: ""
 				, mainContentEditDisabled = isTrue( formData.main_content_edit_disabled ?: "" )
 				, childPagesEnabled       = isTrue( formData.child_pages_enabled        ?: "" )
-				, contentSectionsEnabled  = isTrue( formData.content_sections_enabled   ?: "" )
 			  }
 		);
 

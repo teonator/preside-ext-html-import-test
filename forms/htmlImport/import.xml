@@ -19,13 +19,6 @@
 					<param name="checkedValue" value="1" />
 				</rule>
 			</field>
-			<field name="content_sections_enabled"   control="toggle"                   sortOrder="80" toggleType="switch" toggleFields="content_sections_heading" />
-			<field name="content_sections_heading"   control="enumSelect"               sortOrder="90" enum="htmlImportContentSectionsHeading" default="h3">
-				<rule validator="requiredIfOtherFieldChecked">
-					<param name="otherField"   value="content_sections_enabled" />
-					<param name="checkedValue" value="1" />
-				</rule>
-			</field>
 		</fieldset>
 	</tab>
 </form>

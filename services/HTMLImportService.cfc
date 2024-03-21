@@ -4,7 +4,9 @@
  */
 component {
 
-	property name="siteTreeService" inject="SiteTreeService";
+	property name="siteTreeService"              inject="SiteTreeService";
+	property name="assetManagerService"          inject="AssetManagerService";
+	property name="dynamicFindAndReplaceService" inject="DynamicFindAndReplaceService";
 
 	variables._lib   = [];
 	variables._jsoup = "";
@@ -23,12 +25,9 @@ component {
 		,          boolean childPagesEnabled       = false
 		,          string  childPagesHeading       = "h2"
 		,          string  childPagesType          = "standard_page"
-		,          boolean contentSectionsEnabled  = false
-		,          string  contentSectionsHeading  = "h3"
 		,          any     logger
 		,          any     progress
 	) {
-		var tmpFileDir = "";
 		var parentPageId = arguments.page;
 		var totalPages = 0;
 
@@ -38,9 +37,8 @@ component {
 			if ( !$helpers.isEmptyString( arguments.zipFile.path ?: "" ) ) {
 				arguments.logger?.info( "Unpacking ZIP..." );
 
-				tmpFileDir  = _unpackZipFile( zipFilePath=arguments.zipFile.path );
-
-				var htmlContent = _getHtmlContent( htmlFileDir=tmpFileDir );
+				var htmlFileDir = _unpackZipFile( zipFilePath=arguments.zipFile.path );
+				var htmlContent = _getHtmlContent( htmlFileDir=htmlFileDir );
 
 				if ( !$helpers.isEmptyString( htmlContent ) ) {
 					arguments.logger?.info( "Parsing HTML..." );
@@ -86,58 +84,7 @@ component {
 						ArrayAppend( pages, { title=pageTitle, content=pageContent, child=pageChild } );
 					}
 
-					totalPages = ArrayLen( pages );
-
-					if ( totalPages ) {
-						var parentPage = siteTreeService.getPage( id=parentPageId );
-
-						for ( var page in pages ) {
-							var slug = $helpers.slugify( page.title );
-
-							if ( page.child ) {
-								var pageId = siteTreeService.getPageIdBySlug( slug="#parentPage._hierarchy_slug##slug#/" );
-
-								if ( !$helpers.isEmptyString( pageId ) ) {
-									arguments.logger?.info( "Updating #arguments.childPagesType#: #page.title#" );
-
-									siteTreeService.editPage(
-										  id                         = pageId
-										, title                      = page.title
-										, main_content               = page.content
-										, main_content_edit_disabled = arguments.mainContentEditDisabled
-										, use_sections               = arguments.contentSectionsEnabled
-										, sections_heading           = arguments.contentSectionsHeading
-									);
-								} else {
-									arguments.logger?.info( "Creating #arguments.childPagesType#: #page.title#" );
-
-									pageId = siteTreeService.addPage(
-										  page_type                  = arguments.childPagesType
-										, slug                       = slug
-										, parent_page                = parentPageId
-										, title                      = page.title
-										, main_content               = page.content
-										, main_content_edit_disabled = arguments.mainContentEditDisabled
-										, use_sections               = arguments.contentSectionsEnabled
-										, sections_heading           = arguments.contentSectionsHeading
-									);
-								}
-							} else {
-								var pageTitle = $helpers.isEmptyString( page.title ) ? parentPage.title : page.title;
-
-								arguments.logger?.info( "Updating #parentPage.page_type#: #pageTitle#" );
-
-								siteTreeService.editPage(
-									  id                         = parentPageId
-									, title                      = pageTitle
-									, main_content               = page.content
-									, main_content_edit_disabled = arguments.mainContentEditDisabled
-									, use_sections               = arguments.contentSectionsEnabled
-									, sections_heading           = arguments.contentSectionsHeading
-								);
-							}
-						}
-					}
+					totalPages = _processPages( argumentCollection=arguments, pages=pages, htmlFileDir=htmlFileDir, parentPageId=parentPageId );
 				}
 			}
 		} catch( any e ) {
@@ -177,6 +124,100 @@ component {
 		}
 
 		return "";
+	}
+
+	private numeric function _processPages(
+		  required array   pages
+		, required string  htmlFileDir
+		, required string  parentPageId
+		,          string  childPagesType          = "standard_page"
+		,          boolean mainContentEditDisabled = false
+		,          any     logger
+		,          any     progress
+	) {
+		var totalPages = ArrayLen( arguments.pages );
+
+		if ( totalPages ) {
+			var parentPage = siteTreeService.getPage( id=arguments.parentPageId );
+
+			for ( var page in pages ) {
+				var slug = $helpers.slugify( page.title );
+
+				var content = _processImages( argumentCollection=arguments, htmlContent=page.content );
+
+				if ( page.child ) {
+					var pageId = siteTreeService.getPageIdBySlug( slug="#parentPage._hierarchy_slug##slug#/" );
+
+					if ( !$helpers.isEmptyString( pageId ) ) {
+						arguments.logger?.info( "Updating #arguments.childPagesType#: #page.title#" );
+
+						siteTreeService.editPage(
+							  id                         = pageId
+							, title                      = page.title
+							, main_content               = content
+							, main_content_edit_disabled = arguments.mainContentEditDisabled
+						);
+					} else {
+						arguments.logger?.info( "Creating #arguments.childPagesType#: #page.title#" );
+
+						pageId = siteTreeService.addPage(
+							  page_type                  = arguments.childPagesType
+							, slug                       = slug
+							, parent_page                = parentPageId
+							, title                      = page.title
+							, main_content               = content
+							, main_content_edit_disabled = arguments.mainContentEditDisabled
+						);
+					}
+				} else {
+					var pageTitle = $helpers.isEmptyString( page.title ) ? parentPage.title : page.title;
+
+					arguments.logger?.info( "Updating #parentPage.page_type#: #pageTitle#" );
+
+					siteTreeService.editPage(
+						  id                         = parentPageId
+						, title                      = pageTitle
+						, main_content               = content
+						, main_content_edit_disabled = arguments.mainContentEditDisabled
+					);
+				}
+			}
+		}
+
+		return totalPages;
+	}
+
+	private string function _processImages(
+		  required string htmlContent
+		, required string htmlFileDir
+		,          any    logger
+		,          any    progress
+	) {
+		return dynamicFindAndReplaceService.dynamicFindAndReplace( source=arguments.htmlContent, regexPattern='<img[^>]*src="(.*?)"[^>]*>', recurse=false, processor=function( captureGroups ) {
+			var srcPath = arguments.captureGroups[ 2 ] ?: "";
+
+			if ( !$helpers.isEmptyString( srcPath ) ) {
+				var fileName = ListLast( srcPath, "/" );
+				var filePath = "#htmlFileDir#/#srcPath#";
+
+				var assetId = assetManagerService.addAsset(
+					  folder            = "importHtmlFiles"
+					, ensureUniqueTitle = true
+					, fileName          = fileName
+					, filePath          = filePath
+				);
+
+				if ( !$helpers.isEmptyString( assetId ) ) {
+					var configs = {
+						asset = assetId
+					};
+
+					return "{{image:#UrlEncode( SerializeJSON( configs ) )#:image}}";
+				}
+			}
+
+			return "";
+		} );
 	}
 
 	private any function _new( className ) {

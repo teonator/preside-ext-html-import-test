@@ -8,6 +8,7 @@ component {
 		_setupSettings( settings );
 		_setupEnums( settings );
 		_setupRicheditor( settings );
+		_setupAssetManager( settings );
 		_setupInterceptors( conf );
 	}
 
@@ -24,13 +25,19 @@ component {
 	private void function _setupEnums( settings ) {
 		settings.enum.htmlImportPageHeading            = [ "h1", "h2", "h3", "h4", "h5", "h6" ];
 		settings.enum.htmlImportChildPagesHeading      = [ "h1", "h2", "h3", "h4", "h5", "h6" ];
-		settings.enum.htmlImportContentSectionsHeading = [ "h1", "h2", "h3", "h4", "h5", "h6" ];
 	}
 
 	private void function _setupRicheditor( settings ) {
 		settings.ckeditor.toolbars = settings.ckeditor.toolbars ?: {};
 
 		StructAppend( settings.ckeditor.toolbars, { htmlImportReadOnly='Maximize,Preview' } );
+	}
+
+	private void function _setupAssetManager( required struct settings  ) {
+		settings.assetmanager.folders.importHtmlFiles = {
+			  label  = "Imported HTML files"
+			, hidden = false
+		};
 	}
 
 	private void function _setupInterceptors( conf ) {

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form>
+	<tab id="access">
+		<fieldset id="html_import" sortOrder="50" feature="htmlImport">
+			<field binding="page.main_content_edit_disabled" sortOrder="10" />
+		</fieldset>
+	</tab>
+</form>

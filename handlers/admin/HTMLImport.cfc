@@ -1,5 +1,6 @@
 component extends="preside.system.base.AdminHandler" {
 
+	property name="sitetreeService"   inject="SitetreeService";
 	property name="htmlImportService" inject="HTMLImportService";
 
 	public function preHandler( event, rc, prc ) {
@@ -31,6 +32,22 @@ component extends="preside.system.base.AdminHandler" {
 
 		prc.pageTitle = translateResource( uri="HTMLImport:title"     );
 		prc.pageIcon  = translateResource( uri="HTMLImport:iconClass" );
+
+		var ancestors = sitetreeService.getAncestors( id=pageId, selectFields=[ "id", "title" ] );
+
+		for( var ancestor in ancestors ) {
+			event.addAdminBreadCrumb(
+				  title = ancestor.title
+				, link  = event.buildAdminLink( linkTo="sitetree.editpage", queryString="id=#ancestor.id#" )
+			);
+		}
+
+		var page = sitetreeService.getPage( id=pageId, selectFields=[ "id", "title" ] );
+
+		event.addAdminBreadCrumb(
+			  title = page.title ?: ""
+			, link  = event.buildAdminLink( linkTo="sitetree.editpage", queryString="id=#pageId#"  )
+		);
 
 		event.addAdminBreadCrumb(
 			  title = prc.pageTitle

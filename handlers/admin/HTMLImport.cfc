@@ -54,6 +54,8 @@ component extends="preside.system.base.AdminHandler" {
 			, link  = ""
 		);
 
+		event.include( assetId="/js/admin/specific/htmlImport/" );
+
 		event.setView( view="admin/htmlImport/import", args=args );
 	}
 
@@ -61,6 +63,7 @@ component extends="preside.system.base.AdminHandler" {
 		var validationResult = validateForms();
 		var formData         = event.getCollectionForForm();
 		var pageId           = formData.page ?: "";
+		var saveAsDraft      = ( rc._saveaction ?: "" ) != "publish";
 
 		if ( !validationResult.validated() ) {
 			var persistStruct = event.getCollectionWithoutSystemVars();
@@ -86,7 +89,8 @@ component extends="preside.system.base.AdminHandler" {
 				, pageHeading             = formData.page_heading        ?: ""
 				, childPagesHeading       = formData.child_pages_heading ?: ""
 				, childPagesType          = formData.child_pages_type    ?: ""
-				, childPagesEnabled       = isTrue( formData.child_pages_enabled        ?: "" )
+				, childPagesEnabled       = isTrue( formData.child_pages_enabled ?: "" )
+				, isDraft                 = saveAsDraft
 				, data                    = formData
 			  }
 		);

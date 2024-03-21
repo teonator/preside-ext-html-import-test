@@ -19,12 +19,13 @@ component {
 
 	public string function importFromZipFile(
 		  required struct  zipFile
-		,          string  page                    = ""
-		,          string  pageHeading             = "h1"
-		,          boolean childPagesEnabled       = false
-		,          string  childPagesHeading       = "h2"
-		,          string  childPagesType          = "standard_page"
-		,          struct  data                    = {}
+		,          string  page              = ""
+		,          string  pageHeading       = "h1"
+		,          boolean childPagesEnabled = false
+		,          string  childPagesHeading = "h2"
+		,          string  childPagesType    = "standard_page"
+		,          boolean isDraft           = false
+		,          struct  data              = {}
 		,          any     logger
 		,          any     progress
 	) {
@@ -130,8 +131,9 @@ component {
 		  required array   pages
 		, required string  htmlFileDir
 		, required string  parentPageId
-		,          string  childPagesType          = "standard_page"
-		,          struct  data                    = {}
+		,          string  childPagesType = "standard_page"
+		,          boolean isDraft        = false
+		,          struct  data           = {}
 		,          any     logger
 		,          any     progress
 	) {
@@ -141,7 +143,7 @@ component {
 		var pageTypeName = $translateResource( uri="page-types.#arguments.childPagesType#:name", defaultValue=arguments.childPagesType );
 
 		if ( totalPages ) {
-			var parentPage = siteTreeService.getPage( id=arguments.parentPageId, selectFields=[ "title", "_hierarchy_slug", "page_type" ] );
+			var parentPage = siteTreeService.getPage( id=arguments.parentPageId, selectFields=[ "id", "title", "_hierarchy_slug", "page_type" ], allowDrafts=true );
 
 			for ( var i=1; i<=totalPages; i++ ) {
 				var title   = $helpers.isEmptyString( arguments.pages[ i ].title ) ? parentPage.title : arguments.pages[ i ].title;
@@ -159,6 +161,7 @@ component {
 							  id           = pageId
 							, title        = title
 							, main_content = content
+							, isDraft      = arguments.isDraft
 						);
 					} else {
 						arguments.logger?.info( "Creating #pageTypeName#: #title#" );
@@ -166,9 +169,10 @@ component {
 						pageId = siteTreeService.addPage(
 							  page_type    = arguments.childPagesType
 							, slug         = slug
-							, parent_page  = parentPageId
+							, parent_page  = parentPage.id
 							, title        = title
 							, main_content = content
+							, isDraft      = arguments.isDraft
 						);
 					}
 
@@ -180,6 +184,7 @@ component {
 						  id           = parentPageId
 						, title        = title
 						, main_content = content
+						, isDraft      = arguments.isDraft
 					);
 
 					arguments.pages[ i ].id = parentPageId;

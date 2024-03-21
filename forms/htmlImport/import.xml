@@ -5,14 +5,14 @@
 			<field name="page"                       control="siteTreePagePicker"       sortOrder="10" required="true" />
 			<field name="zip_file"                   control="fileupload"               sortOrder="20" required="true" accept="application/zip" />
 			<field name="page_heading"               control="enumSelect"               sortOrder="30" enum="htmlImportPageHeading" default="" />
-			<field name="child_pages_enabled"        control="toggle"                   sortOrder="40" toggleType="switch" toggleFields="child_pages_heading,child_pages_type" />
-			<field name="child_pages_heading"        control="enumSelect"               sortOrder="50" enum="htmlImportChildPagesHeading" default="h2">
+			<field name="child_pages_enabled"        control="yesNoSwitch"              sortOrder="40" />
+			<field name="child_pages_heading"        control="enumSelect"               sortOrder="50" class="html-import-child-pages-field" enum="htmlImportChildPagesHeading" default="h2">
 				<rule validator="requiredIfOtherFieldChecked">
 					<param name="otherField"   value="child_pages_enabled" />
 					<param name="checkedValue" value="1" />
 				</rule>
 			</field>
-			<field name="child_pages_type"           control="htmlImportPageTypePicker" sortOrder="60">
+			<field name="child_pages_type"           control="htmlImportPageTypePicker" sortOrder="60" class="html-import-child-pages-field">
 				<rule validator="requiredIfOtherFieldChecked">
 					<param name="otherField"   value="child_pages_enabled" />
 					<param name="checkedValue" value="1" />
